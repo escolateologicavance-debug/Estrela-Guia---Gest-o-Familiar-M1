@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avaliação Final - Estrela Guia</title>
+<script src="https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#eef5ff;
+    padding:10px;
+}
+.container{
+    max-width:800px;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 0 15px rgba(0,0,0,0.1);
+}
+.question{
+    margin-bottom:15px;
+    border-bottom:1px solid #eee;
+    padding-bottom:10px;
+}
+button{
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:6px;
+    margin-top:10px;
+    font-size:16px;
+    cursor:pointer;
+    font-weight:bold;
+}
+.finalizar{ background:#1f3c88; color:white; }
+.btn-gerar{ background:#0a58ca; color:white; }
+
+.result{
+    margin-top:20px;
+    padding:15px;
+    border-radius:8px;
+    text-align:center;
+    font-weight:bold;
+}
+.aprovado{ background:#d4edda; color:#155724; }
+.reprovado{ background:#f8d7da; color:#721c24; }
+
+input[type="text"]{
+    width:100%;
+    padding:12px;
+    margin:10px 0;
+    border:2px solid #0a58ca;
+    border-radius:6px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h1>Avaliação Final - Gestão Familiar</h1>
+<form id="quizForm"></form>
+<button class="finalizar" onclick="corrigir()">Finalizar Avaliação</button>
+
+<div id="resultado"></div>
+
+<div id="bloco-certificado" style="display:none; margin-top:20px; text-align:center;">
+    <h3 style="color:#1f3c88;">Aprovado! 🏆</h3>
+    <p>Digite seu nome completo:</p>
+    <input type="text" id="nomeCompleto" placeholder="Nome Completo">
+    <button class="btn-gerar" onclick="baixarCertificado()">BAIXAR CERTIFICADO EM PDF</button>
+</div>
+
+<div id="area-certificado" style="
+visibility:hidden;
+position:absolute;
+left:-9999px;
+top:0;
+width:1122px;
+height:794px;
+background:#f5f0e6;
+padding:60px;
+box-sizing:border-box;
+">
+
+<div style="
+background:#fdfaf3;
+height:100%;
+border:10px solid #1f3c88;
+padding:60px;
+text-align:center;
+box-sizing:border-box;
+position:relative;
+">
+
+<h1 style="font-size:50px;color:#1f3c88;margin:0;">Estrela Guia</h1>
+<h2 style="color:#0a58ca;letter-spacing:3px;">CERTIFICADO DE CONCLUSÃO</h2>
+
+<p style="font-size:22px;margin-top:40px;">Certificamos que</p>
+
+<h2 id="pdf-nome" style="
+font-size:36px;
+color:#1f3c88;
+border-bottom:2px solid #0a58ca;
+display:inline-block;
+padding:10px 20px;
+"></h2>
+
+<p style="font-size:20px;margin-top:30px;">
+Concluiu com aproveitamento o Curso de<br>
+<strong>Gestão Familiar - Estágio 1</strong>
+</p>
+
+<p style="margin-top:40px;font-size:18px;">
+Itanhangá-MT, <span id="pdf-data"></span>
+</p>
+
+<p style="margin-top:50px;font-size:12px;color:#555;">
+Certificado válido em todo território nacional<br>
+(Base Legal: Lei nº 9.394/96)
+</p>
+
+<!-- LINHA AZUL INFERIOR ADICIONADA -->
+<div style="
+position:absolute;
+bottom:25px;
+left:60px;
+right:60px;
+height:8px;
+background:#1f3c88;
+"></div>
+
+</div>
+</div>
+</div>
+
+<script>
+
+const perguntas = [
+
+{tipo:"vf", pergunta:"A base da gestão familiar começa pelo autoconhecimento.", correta:"V"},
+{tipo:"mc", pergunta:"No Módulo 1, autoconhecimento ajuda a:", opcoes:["Melhorar decisões","Controlar outros","Evitar diálogo","Ignorar erros"], correta:0},
+
+{tipo:"vf", pergunta:"Comunicação eficaz exige escuta ativa.", correta:"V"},
+{tipo:"mc", pergunta:"No Módulo 2, conflito saudável significa:", opcoes:["Diálogo respeitoso","Silêncio constante","Autoritarismo","Afastamento"], correta:0},
+
+{tipo:"vf", pergunta:"Planejamento financeiro reduz tensões familiares.", correta:"V"},
+{tipo:"mc", pergunta:"No Módulo 3, liderança equilibrada envolve:", opcoes:["Exemplo e responsabilidade","Medo","Imposição","Rigidez extrema"], correta:0},
+
+{tipo:"vf", pergunta:"Ignorar emoções fortalece relacionamentos.", correta:"F"},
+{tipo:"mc", pergunta:"Gestão emocional permite:", opcoes:["Reações conscientes","Explosões frequentes","Negação emocional","Controle externo"], correta:0},
+
+{tipo:"vf", pergunta:"Limites claros aumentam respeito mútuo.", correta:"V"},
+{tipo:"mc", pergunta:"Organização familiar depende de:", opcoes:["Planejamento e rotina","Improvisação constante","Descontrole financeiro","Falta de metas"], correta:0},
+
+{tipo:"vf", pergunta:"Educação financeira não interfere na harmonia familiar.", correta:"F"},
+{tipo:"mc", pergunta:"Inteligência emocional contribui para:", opcoes:["Equilíbrio","Impulsividade","Frieza","Indiferença"], correta:0},
+
+{tipo:"vf", pergunta:"Responsabilidade individual impacta o coletivo.", correta:"V"},
+{tipo:"mc", pergunta:"No Módulo 4, valores familiares são:", opcoes:["Base da estrutura","Detalhes irrelevantes","Imposições rígidas","Obstáculos"], correta:0},
+
+{tipo:"vf", pergunta:"Crescimento familiar exige comprometimento contínuo.", correta:"V"},
+{tipo:"mc", pergunta:"No Módulo 5, maturidade emocional envolve:", opcoes:["Autocontrole","Repressão","Superioridade","Distanciamento"], correta:0},
+
+{tipo:"vf", pergunta:"Exemplo dos pais influencia comportamento dos filhos.", correta:"V"},
+{tipo:"mc", pergunta:"Gestão familiar eficaz promove:", opcoes:["União e estabilidade","Competição interna","Desorganização","Indiferença"], correta:0}
+
+];
+
+function gerarProva(){
+    const form=document.getElementById("quizForm");
+    perguntas.forEach((q,i)=>{
+        let div=document.createElement("div");
+        div.className="question";
+        div.innerHTML=`<p><b>${i+1}. ${q.pergunta}</b></p>`;
+        if(q.tipo==="vf"){
+            ["V","F"].forEach(op=>{
+                div.innerHTML+=`<label style="display:block;">
+                <input type="radio" name="q${i}" value="${op}">
+                ${op==="V"?"Verdadeiro":"Falso"}
+                </label>`;
+            });
+        }else{
+            q.opcoes.forEach(op=>{
+                div.innerHTML+=`<label style="display:block;">
+                <input type="radio" name="q${i}" value="${op}">
+                ${op}
+                </label>`;
+            });
+        }
+        form.appendChild(div);
+    });
+}
+gerarProva();
+
+function corrigir(){
+    let total=0;
+
+    perguntas.forEach((q,i)=>{
+        let r=document.querySelector(`input[name="q${i}"]:checked`);
+        if(r){
+            if(q.tipo==="vf" && r.value===q.correta) total++;
+            if(q.tipo==="mc" && r.value===q.opcoes[q.correta]) total++;
+        }
+    });
+
+    let nota=(total/perguntas.length)*10;
+    let res=document.getElementById("resultado");
+
+    if(nota>=7){
+        res.className="result aprovado";
+        res.innerHTML=`Nota: ${nota.toFixed(1)} - Você foi aprovado! 🏆`;
+        document.getElementById("bloco-certificado").style.display="block";
+    }else{
+        res.className="result reprovado";
+        res.innerHTML=`Nota: ${nota.toFixed(1)} - Não atingiu 7.0 😢`;
+    }
+}
+
+function baixarCertificado(){
+
+    const nome=document.getElementById("nomeCompleto").value.trim();
+    if(!nome){
+        alert("Digite seu nome completo.");
+        return;
+    }
+
+    document.getElementById("pdf-nome").innerText=nome;
+    document.getElementById("pdf-data").innerText=
+        new Date().toLocaleDateString("pt-BR");
+
+    const element=document.getElementById("area-certificado");
+
+    element.style.visibility="visible";
+    element.style.position="static";
+
+    setTimeout(()=>{
+
+        html2pdf().set({
+            margin:0,
+            filename:"Certificado_Estrela_Guia.pdf",
+            image:{type:"jpeg",quality:0.98},
+            html2canvas:{scale:3,useCORS:true,scrollY:0},
+            jsPDF:{unit:"mm",format:"a4",orientation:"landscape"}
+        }).from(element).save().then(()=>{
+
+            element.style.visibility="hidden";
+            element.style.position="absolute";
+            element.style.left="-9999px";
+
+        });
+
+    },300);
+}
+
+</script>
+</body>
+</html>
